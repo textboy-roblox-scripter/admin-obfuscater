@@ -1,36 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Phantom Admin Panel</title>
+  <title> PHANTOM Obfuscator</title>
   <style>
     body {
-      background-color: #0e0e11;
-      color: white;
+      background-color: #111;
+      color: #eee;
       font-family: monospace;
-      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
     }
 
-    #loginBox {
-      background: #1a1a1f;
-      padding: 20px;
-      border-radius: 12px;
-      max-width: 300px;
-      margin: 100px auto;
-      text-align: center;
+    h1 {
+      color: #a855f7;
+      text-shadow: 0 0 10px #9333ea;
     }
 
-    #panel {
-      display: none;
-    }
-
-    input[type="password"] {
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      background: #111;
-      color: #fff;
-      width: 100%;
-      margin-bottom: 10px;
+    textarea {
+      width: 90%;
+      max-width: 800px;
+      height: 200px;
+      background: #1a1a1a;
+      color: #00ffcc;
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 14px;
+      margin-bottom: 20px;
     }
 
     button {
@@ -39,62 +37,52 @@
       border: none;
       padding: 10px 20px;
       font-weight: bold;
+      font-size: 16px;
       border-radius: 8px;
       cursor: pointer;
     }
 
-    textarea {
-      width: 100%;
-      height: 120px;
-      background: #111;
-      color: #00ffcc;
-      border: 1px solid #444;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 6px;
+    button:hover {
+      background: #6b21a8;
     }
   </style>
 </head>
 <body>
+  <h1>Phantom Obfuscator</h1>
+  <textarea id="input" placeholder="Paste Lua code (e.g. print('Hello'))"></textarea>
+  <button onclick="obfuscate()">0bfuscate</button>
+  <textarea id="output" readonly placeholder="Obfuscated code will appear here..."></textarea>
 
-<div id="loginBox">
-  <h2>🔐 Admin Login</h2>
-  <input type="password" id="password" placeholder="Enter password" />
-  <button onclick="login()">Login</button>
-</div>
-
-<div id="panel">
-  <h1>📜 Obfuscation Logs</h1>
-  <div id="logs"></div>
-</div>
-
-<script>
-  const ADMIN_PASS = "stealergg"; // Change this password
-
-  function login() {
-    const input = document.getElementById("password").value;
-    if (input === ADMIN_PASS) {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("panel").style.display = "block";
-      showLogs();
-    } else {
-      alert("❌ Wrong password");
+  <script>
+    function toHex(str) {
+      return str.split('').map(c =>
+        '\\x' + c.charCodeAt(0).toString(16).padStart(2, '0')
+      ).join('');
     }
-  }
 
-  function showLogs() {
-    const logs = JSON.parse(localStorage.getItem("phantomLogs") || "[]");
-    const container = document.getElementById("logs");
-    container.innerHTML = logs.map(log => `
-      <textarea readonly>
-🕒 ${log.time}
-🔹 Input: ${log.input}
-🔒 Obfuscated:
-${log.obfuscated}
-      </textarea>
-    `).join("");
-  }
-</script>
+    function obfuscate() {
+      const input = document.getElementById("input").value.trim();
+      let match = input.match(/^(\w+)\s*\(\s*["'](.+?)["']\s*\)$/);
 
+      if (!match) {
+        alert("⚠️ Use format: print(\"hello\")");
+        return;
+      }
+
+      const func = match[1];
+      const arg = match[2];
+
+      const hexFunc = toHex(func);
+      const hexArg = toHex(arg);
+      const result = `_G["${hexFunc}"]("${hexArg}")`;
+
+      document.getElementById("output").value = result;
+
+      // Save to localStorage
+      let logs = JSON.parse(localStorage.getItem("phantomLogs") || "[]");
+      logs.push({ input, obfuscated: result, time: new Date().toLocaleString() });
+      localStorage.setItem("phantomLogs", JSON.stringify(logs));
+    }
+  </script>
 </body>
 </html>
